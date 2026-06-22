@@ -1,0 +1,8 @@
+27a28
+> #include "lib/Dialect/VFHE/IR/VFHEDialect.h"    // vHEIR: verification dialect
+131a133
+> #include "lib/Transforms/ValidateVFHE/ValidateVFHE.h"  // vHEIR: proof-class pass
+207a210
+>   registry.insert<vfhe::VFHEDialect>();  // vHEIR: verification plane dialect
+356a360
+>   registerValidateVFHEPasses();  // vHEIR: proof-class classification + validation

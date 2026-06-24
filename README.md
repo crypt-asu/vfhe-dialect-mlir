@@ -1,63 +1,63 @@
 # vHEIR – HEIR Verification Plane Extension
 
-Bu dizin, *"vHEIR: A Proof-Carrying Compiler Architecture for Fully Homomorphic
-Encryption with Integrated Verification"* makalesindeki vfhe dialect'ini ve
-ValidateVFHE pass'lerini HEIR'ın gerçek kaynak ağacına eklemek için gereken
-tüm dosyaları içerir.
+This directory contains all files required to integrate the `vfhe` dialect and
+`ValidateVFHE` passes described in *"vHEIR: A Proof-Carrying Compiler Architecture
+for Fully Homomorphic Encryption with Integrated Verification"* into the HEIR
+source tree.
 
-## Dizin yapısı
+## Directory Structure
 
 ```
 VFHE/IR/
-  VFHEDialect.td          – dialect tanımı (cppNamespace = mlir::heir::vfhe)
+  VFHEDialect.td          – dialect definition (cppNamespace = mlir::heir::vfhe)
   VFHEEnums.td            – VFHEProofClass enum (ring_linear / ring_arith / maintenance)
   VFHEAttributes.td       – ProofClassAttr, WitnessTraceAttr
   VFHEOps.td              – vfhe.commit, vfhe.attest
-  VFHEDialect.{h,cpp}     – C++ dialect implementasyonu
+  VFHEDialect.{h,cpp}     – C++ dialect implementation
   VFHEEnums.h             – enum header
   VFHEAttributes.h        – attribute header
-  VFHEOps.{h,cpp}         – op implementasyonu
-  BUILD                   – Bazel build kuralları
+  VFHEOps.{h,cpp}         – op implementation
+  BUILD                   – Bazel build rules
 
 ValidateVFHE/
-  ValidateVFHE.td         – VFHEClassifyOps + VFHEValidateClassification pass tanımları
-  ValidateVFHE.{h,cpp}    – pass implementasyonu (sınıflandırma + doğrulama)
-  BUILD                   – Bazel build kuralları
+  ValidateVFHE.td         – VFHEClassifyOps + VFHEValidateClassification pass definitions
+  ValidateVFHE.{h,cpp}    – pass implementation (classification + validation)
+  BUILD                   – Bazel build rules
 
-validate_vfhe/ (lit testler)
-  classify_mgmt_ops.mlir              – classify-ops RUN testi (FileCheck)
-  validate_missing_witness_trace_fail.mlir – negatif doğrulama testi
-  full_pipeline_ok.mlir               – tam pipeline başarı testi
+validate_vfhe/ (lit tests)
+  classify_mgmt_ops.mlir                   – classify-ops RUN test (FileCheck)
+  validate_missing_witness_trace_fail.mlir – negative validation test
+  full_pipeline_ok.mlir                    – full pipeline success test
 
-heir_opt_integration.patch  – tools/heir-opt.cpp'e 4 satır ekleme (diff formatı)
-vfhe_standalone_test.cpp    – MLIR kütüphanesi olmadan doğrulanabilir standalone test
+heir_opt_integration.patch  – 4-line patch to tools/heir-opt.cpp (diff format)
+vfhe_standalone_test.cpp    – standalone test verifiable without the MLIR library
 ```
 
-## HEIR'a entegrasyon adımları
+## Integration Steps
 
-1. `VFHE/IR/` dizinini `heir/lib/Dialect/VFHE/IR/` altına kopyala
-2. `ValidateVFHE/` dizinini `heir/lib/Transforms/ValidateVFHE/` altına kopyala
-3. `heir_opt_integration.patch`'i uygula:
+1. Copy `VFHE/IR/` to `heir/lib/Dialect/VFHE/IR/`
+2. Copy `ValidateVFHE/` to `heir/lib/Transforms/ValidateVFHE/`
+3. Apply the patch:
    ```
    patch -p1 < heir_opt_integration.patch
    ```
-4. Bazel ile derle:
+4. Build with Bazel:
    ```
    bazel build //lib/Dialect/VFHE/IR:Dialect
    bazel build //lib/Transforms/ValidateVFHE:ValidateVFHE
    bazel build //tools:heir-opt
    ```
-5. Testleri çalıştır:
+5. Run the tests:
    ```
    bazel test //tests/Transforms/validate_vfhe/...
    ```
 
-## Doğrulama kanıtı
+## Validation Evidence
 
-Tüm TableGen adımları (9 adet) LLVM 18.1.3 (mlir-tblgen-18) ile hatasız geçmiştir.
-Standalone test programı derlenmiş ve 5/5 testi geçmiştir:
-  - ProofClassEnum değerleri
-  - ProofClassAttr depolama/getirme
-  - WitnessTraceAttr depolama/getirme
-  - Sınıflandırma mantığı (14 op'un tamamı doğru sınıflandırıldı)
-  - Doğrulama mantığı (iyi biçimli ve kötü biçimli modüller doğru işlendi)
+All TableGen steps (9 total) pass without errors under LLVM 18.1.3 (mlir-tblgen-18).
+The standalone test program compiles and passes all 5/5 tests:
+  - ProofClassEnum values
+  - ProofClassAttr storage and retrieval
+  - WitnessTraceAttr storage and retrieval
+  - Classification logic (all 14 ops correctly classified)
+  - Validation logic (well-formed and ill-formed modules handled correctly)
